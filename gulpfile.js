@@ -1,11 +1,13 @@
-var gulp =require('gulp'),
+var gulp = require('gulp'),
     sass = require('gulp-sass'),
+    autoprefixer = require('gulp-autoprefixer'),
     browserSync = require('browser-sync').create();
 
 
 function sassToCss(inPath, outPath) {
     return gulp.src(inPath)
         .pipe(sass())
+        .pipe(autoprefixer())
         .pipe(gulp.dest(outPath))
         .pipe(browserSync.stream());
 }
