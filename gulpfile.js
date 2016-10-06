@@ -1,32 +1,28 @@
 var gulp = require('gulp'),
     sass = require('gulp-sass'),
     autoprefixer = require('gulp-autoprefixer'),
-    browserSync = require('browser-sync').create();
+    server = require('gulp-server-livereload');
 
 
-function sassToCss(inPath, outPath) {
-    return gulp.src(inPath)
-        .pipe(sass())
-        .pipe(autoprefixer())
-        .pipe(gulp.dest(outPath))
-        .pipe(browserSync.stream());
-}
+gulp.task('serve', function () {
+    gulp.src('src')
+        .pipe(server({
+            livereload: true,
+            open: true
+        }));
+});
+
 
 gulp.task('sass', function () {
-    return sassToCss('src/sass/*.sass', 'src/css')
+    return gulp.src('src/sass/**/*.sass')
+        .pipe(sass().on('error', sass.logError))
+        .pipe(autoprefixer())
+        .pipe(gulp.dest('src/css'));
 });
 
 
 gulp.task('watch', ['sass'], function () {
-    var sassInPath = 'src/sass/*.sass',
-        allPath = 'src/**/*';
-
-    browserSync.init({
-        server: {
-            baseDir: 'src/'
-        }
-    });
-
-    gulp.watch(sassInPath, ['sass']);
-    gulp.watch(allPath).on('change', browserSync.reload)
+    gulp.watch('src/sass/**/*.sass', ['sass']);
 });
+
+gulp.task('default', ['serve', 'watch']);
