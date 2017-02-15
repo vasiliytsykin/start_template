@@ -8,7 +8,12 @@ gulp.task('serve', function () {
     gulp.src('src')
         .pipe(server({
             livereload: true,
-            open: true
+            open: true,
+            proxies: [
+                {
+                    target: 'http://your_php_server'
+                }
+            ]
         }));
 });
 
