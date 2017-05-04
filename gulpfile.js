@@ -1,33 +1,53 @@
 var gulp = require('gulp'),
     sass = require('gulp-sass'),
     autoprefixer = require('gulp-autoprefixer'),
-    server = require('gulp-server-livereload');
+    browserSync = require('browser-sync').create(),
+    concat = require('gulp-concat'),
+    rename = require('gulp-rename'),
+    minifyCSS = require('gulp-clean-css');
 
 
-gulp.task('serve', function () {
-    gulp.src('src')
-        .pipe(server({
-            livereload: true,
-            open: true,
-            proxies: [
-                {
-                    target: 'http://your_php_server'
-                }
-            ]
-        }));
-});
-
-
-gulp.task('sass', function () {
-    return gulp.src('src/sass/**/*.sass')
+function sassToCss(inPath, outPath) {
+    return gulp.src(inPath)
         .pipe(sass().on('error', sass.logError))
         .pipe(autoprefixer())
-        .pipe(gulp.dest('src/css'));
+        .pipe(gulp.dest(outPath));
+}
+
+gulp.task('sass', function () {
+    return sassToCss('src/sass/*.sass', 'src/css')
 });
 
 
-gulp.task('watch', ['sass'], function () {
-    gulp.watch('src/sass/**/*.sass', ['sass']);
+gulp.task('css', function(){
+    gulp.src('src/css/**/*.css')
+        .pipe(minifyCSS())
+        .pipe(concat('style.min.css'))
+        .pipe(gulp.dest('dist/css'))
 });
 
-gulp.task('default', ['serve', 'watch']);
+gulp.task('js', function(){
+    gulp.src([
+        'src/lib/jquery/dist/jquery.js',
+        'src/lib/owl.carousel/dist/owl.carousel.js',
+        'src/lib/jquery.inputmask/dist/jquery.inputmask.bundle.js',
+        'src/js/common_script.js',
+        'src/js/feedback.js',
+        'src/js/main_script.js'
+    ])
+        .pipe(concat('script.js'))
+        .pipe(gulp.dest('src/js'))
+});
+
+gulp.task('watch', ['sass', 'js'], function () {
+    var sassInPath = 'src/sass/*.sass',
+        allPath = 'src/**/*';
+
+    browserSync.init({
+        proxy: 'your_site_url',
+        notify: false
+    });
+
+    gulp.watch(sassInPath, ['sass']).on('change', browserSync.reload);
+    gulp.watch(allPath, ['js']).on('change', browserSync.reload)
+});

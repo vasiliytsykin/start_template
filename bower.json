@@ -1,7 +1,13 @@
 {
-  "name": "gulp.test",
+  "name": "start_template",
   "devDependencies": {
     "jquery": "^3.1.0",
-    "bootstrap": "^3.3.7"
+    "slick-carousel": "^1.6.0",
+    "owl.carousel": "^2.1.6",
+    "ion.rangeSlider": "ionrangeslider#^2.1.5",
+    "magnific-popup": "^1.1.0",
+    "progressbar.js": "^1.0.1",
+    "pickmeup": "^3.0.8",
+    "jquery.inputmask": "^3.3.4"
   }
 }
