@@ -30,9 +30,7 @@ gulp.task('js', function(){
     gulp.src([
         'src/lib/jquery/dist/jquery.js',
         'src/lib/owl.carousel/dist/owl.carousel.js',
-        'src/lib/jquery.inputmask/dist/jquery.inputmask.bundle.js',
         'src/js/common_script.js',
-        'src/js/feedback.js',
         'src/js/main_script.js'
     ])
         .pipe(concat('script.js'))
@@ -44,7 +42,7 @@ gulp.task('watch', ['sass', 'js'], function () {
         allPath = 'src/**/*';
 
     browserSync.init({
-        proxy: 'your_site_url',
+        proxy: 'your_site',
         notify: false
     });
 
