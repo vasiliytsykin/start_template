@@ -3,27 +3,42 @@ body *,
 body *:after,
 body *::before
   box-sizing: border-box
+
 body
   font-size: 20px
   line-height: 2
   color: $black
   margin: 0
   padding: 0
+
 a
   text-decoration: none
+
 ol, ul
   list-style: none
+
 input
   -webkit-appearance: none
   border-radius: 0
+
 .clearfix
   &::after
     content: ''
     display: block
     clear: both
+
 .link
   cursor: pointer
+
 .btn
   display: inline-block
   line-height: 1
   text-align: center
+
+.gallery
+	position: relative
+
+.gallery__tab
+	display: none
+	&.active
+		display: block

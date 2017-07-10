@@ -17,8 +17,6 @@
 
 	};
 
-	global.OwlHelper = new OwlHelper;
-
 	global.setScrollTop = function (element, pos) {
 
 		element.on('click', function () {
@@ -289,7 +287,7 @@
 
 	}
 
-	Calendar.prototype.defaults = {
+	Gallery.prototype.defaults = {
 
 	};
 
@@ -305,10 +303,10 @@
 				$gallery = self.$element;
 
 		self.$switch = $gallery.children('.gallery__switch');
-		self.$switchTabsContainer = $switch.find('.switch__tabs');
-		self.$switchTabs = $switch.find('.switch__tab');
+		self.$switchTabsContainer = self.$switch.find('.switch__tabs');
+		self.$switchTabs = self.$switch.find('.switch__tab');
 		self.$tabsContainer = $gallery.children('.gallery__tabs');
-		self.$tabs = $tabsContainer.children('.gallery__tab');
+		self.$tabs = self.$tabsContainer.children('.gallery__tab');
 
 	}
 
@@ -339,8 +337,8 @@
 
 		self.$switchTabs.removeClass(active);
 		self.$tabs.removeClass(active);
-		self.$self.addClass(active);
-		self.$activeTab.addClass(active);
+		$tab.addClass(active);
+		$activeTab.addClass(active);
 
 		$gallery.trigger('tabChanged', [activeTab, $activeTab]);
 
@@ -354,7 +352,7 @@
 					data = $this.data('gallery');
 
 			if (!data) {
-				data = new Calendar(this, typeof options === 'object' && options);
+				data = new Gallery(this, typeof options === 'object' && options);
 				$this.data('gallery', data);
 			}
 

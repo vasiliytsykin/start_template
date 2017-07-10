@@ -29,6 +29,7 @@ gulp.task('css', function () {
 gulp.task('js', function () {
 	gulp.src([
 		'src/lib/jquery/dist/jquery.js',
+		'src/lib/pickmeup/dist/pickmeup.min.js',
 		'src/js/common_script.js',
 		'src/js/formalizer.js',
 		'src/js/main_script.js'
