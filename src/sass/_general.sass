@@ -27,6 +27,8 @@ input
 		border: none
 		background-color: transparent
 		outline: none
+	&[type="radio"], &[type="checkbox"]
+		display: none
 
 textarea
 	font-family: $fontMain
@@ -36,6 +38,15 @@ textarea
 	background-color: transparent
 	outline: none
 	resize: none
+
+.table
+	display: table
+
+.tr
+	display: table-row
+
+.td, .th
+	display: table-cell
 
 .link
 	cursor: pointer
@@ -47,6 +58,9 @@ textarea
 
 .gallery
 	position: relative
+
+.switch__tab
+	cursor: pointer
 
 .gallery__tab
 	display: none

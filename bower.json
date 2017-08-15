@@ -13,6 +13,7 @@
     "flickity": "^2.0.6",
     "jquery-validation": "^1.16.0",
     "jquery-form-validator": "^2.3.64",
-    "autosize": "^3.0.21"
+    "autosize": "^3.0.21",
+    "numeral": "^2.0.6"
   }
 }

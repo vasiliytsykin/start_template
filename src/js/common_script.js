@@ -31,7 +31,7 @@
 		active: 'active',
 		popupOpened: 'popup-opened',
 		disabled: 'disabled'
-	}
+	};
 
 	global.roundTo = function (x, n) {
 		if (isNaN(x) || isNaN(n)) return false;
@@ -90,7 +90,39 @@
 		return null;
 	};
 
+	global.enterFullScreen = function (element) {
+		if (element.requestFullscreen) {
+			element.requestFullscreen();
+		} else if (element.mozRequestFullScreen) {
+			element.mozRequestFullScreen();
+		} else if (element.webkitRequestFullscreen) {
+			element.webkitRequestFullscreen();
+		} else if (element.msRequestFullscreen) {
+			element.msRequestFullscreen();
+		}
+	};
+
 }(window, document, jQuery));
+
+(function scrollIndicator(window, $) {
+
+	var $window = $(window),
+			stInitial = 0;
+
+	$window.on('scroll', function () {
+
+		var st = $window.scrollTop();
+
+		if(st > stInitial)
+			$window.trigger('scrollDown');
+		else
+			$window.trigger('scrollUp');
+
+		stInitial = st;
+
+	});
+
+}(window, jQuery));
 
 (function mediaChecker(global, document, $) {
 
@@ -289,60 +321,177 @@
 
 	Gallery.prototype.defaults = {
 
+		structure: {
+			switchContainer: '.gallery__switch',
+			switchTab: '.switch__tab',
+			tabsContainer: '.gallery__tabs',
+			tab: '.gallery__tab'
+		},
+		dataTabKey: 'tab',
+		autoData: true,
+		disabledClass: '.disabled',
+		autoPlay: false,
+		autoPlayInterval: 4000,
+		switchOnClick: true,
+		switchOnHover: false
+
 	};
 
 	function init() {
 
 		$.proxy(setStructure, this)();
-		$.proxy(setSwitchTabClickHandler, this)();
+
+		if(this.options.autoData)
+			$.proxy(setData, this)();
+
+		this.currentTabNum = $.proxy(getCurrentTabNum, this)();
+		this.tabCount = this.$tabs.length;
+
+		if (this.options.autoPlay)
+			$.proxy(startAnimation, this)();
+
+		if (this.options.switchOnClick)
+			$.proxy(setSwitchTabHandler, this, 'click')();
+
+		if (this.options.switchOnHover)
+			$.proxy(setSwitchTabHandler, this, 'mouseenter')();
+
 	}
 
 	function setStructure() {
 
 		var self = this,
-				$gallery = self.$element;
+				$gallery = self.$element,
+				structure = self.options.structure;
 
-		self.$switch = $gallery.children('.gallery__switch');
-		self.$switchTabsContainer = self.$switch.find('.switch__tabs');
-		self.$switchTabs = self.$switch.find('.switch__tab');
-		self.$tabsContainer = $gallery.children('.gallery__tabs');
-		self.$tabs = self.$tabsContainer.children('.gallery__tab');
+		self.$switch = $gallery.children(structure.switchContainer);
+		self.$switchTabs = self.$switch.find(structure.switchTab);
+		self.$tabsContainer = $gallery.children(structure.tabsContainer);
+		self.$tabs = self.$tabsContainer.children(structure.tab);
 
 	}
 
-	function setSwitchTabClickHandler() {
+	function setData() {
 
 		var self = this,
-				$gallery = self.$element;
+				key = self.options.dataTabKey;
 
-		$gallery.on('click', '.switch__tab:not(.disabled)', function () {
+		self.$switchTabs.each(function (ind, el) {
+			var $el = $(el);
+			$el.data(key, ind + 1);
+		});
 
-			$.proxy(onSwitchTabClick, self, this)();
-
+		self.$tabs.each(function (ind, el) {
+			var $el = $(el);
+			$el.data(key, ind + 1);
 		});
 	}
 
-	function onSwitchTabClick(tab) {
+	function switchTab(activeTab) {
 
 		var self = this,
-				$gallery = self.$element,
-				$tab = $(tab),
-				activeTab = $tab.data('tab'),
-				$activeTab = $gallery.find('.gallery__tab.' + $tab.data('tab')),
-				active = global.classes.active;
+				nextTabNum = self.currentTabNum < self.tabCount ? self.currentTabNum + 1 : 1,
+				tab = activeTab || nextTabNum;
 
-		if(self.$switchTabsContainer.hasClass('is-dragging')) {
-			return false;
-		}
+		self.currentTabNum = tab;
 
-		self.$switchTabs.removeClass(active);
-		self.$tabs.removeClass(active);
-		$tab.addClass(active);
-		$activeTab.addClass(active);
+		self.$switchTabs.each(function (ind, el) {
+			$.proxy(activateTab, self, $(el), tab)();
+		});
 
-		$gallery.trigger('tabChanged', [activeTab, $activeTab]);
+		self.$tabs.each(function (ind, el) {
+			$.proxy(activateTab, self, $(el), tab)();
+		});
 
 	}
+
+	function activateTab($tab, activeTab) {
+
+		var active = window.classes.active,
+				key = this.options.dataTabKey;
+
+		if ($tab.data(key) === activeTab)
+			$tab.addClass(active);
+		else
+			$tab.removeClass(active);
+	}
+
+	function getTab(tab) {
+
+		var self = this,
+				$tab = undefined;
+		self.$tabs.each(function (ind, el) {
+			var $el = $(el);
+			if ($el.data(self.options.dataTabKey) === tab) {
+				$tab = $el;
+				return false;
+			}
+		});
+		return $tab;
+
+	}
+
+	function getCurrentTabNum() {
+		var self = this,
+				tabNum = undefined;
+		self.$tabs.each(function (ind, el) {
+			var $el = $(el);
+			if ($el.hasClass(window.classes.active)) {
+				tabNum = $el.data(self.options.dataTabKey);
+				return false;
+			}
+		});
+		return tabNum;
+	}
+
+	function setSwitchTabHandler(event) {
+
+		var self = this,
+				switchTabClass = self.options.structure.switchTab,
+				disabled = self.options.disabled;
+
+		self.$element.on(event, switchTabClass + ':not(' + disabled + ')', function () {
+
+			if (self.animationStarted)
+				$.proxy(stopAnimation, self)();
+
+			$.proxy(switchTabHandler, this, self)();
+
+		}).on('mouseleave', switchTabClass + ':not(' + disabled + ')', function () {
+			if (self.options.autoPlay)
+				$.proxy(startAnimation, self)();
+		});
+	}
+
+	function switchTabHandler(mainContext) {
+
+		var $tab = $(this),
+				tab = $tab.data(mainContext.options.dataTabKey);
+
+		$.proxy(switchTab, mainContext, tab)();
+		mainContext.$element.trigger('tabChanged', [tab, $.proxy(getTab, mainContext, tab)()]);
+	}
+
+	function startAnimation() {
+		var self = this;
+		if (!self.animationStarted) {
+			self.intervalId = setInterval($.proxy(switchTab, self), self.options.autoPlayInterval);
+			self.animationStarted = true;
+		}
+
+	}
+
+	function stopAnimation() {
+		var self = this;
+		clearInterval(self.intervalId);
+		self.animationStarted = false;
+	}
+
+	Gallery.prototype.switchTab = function (tabNum) {
+
+		$.proxy(switchTab, this, tabNum)();
+
+	};
 
 	$.fn.gallery = function (options) {
 
@@ -363,3 +512,295 @@
 	$.fn.gallery.Constructor = Gallery;
 
 }(window, document, jQuery));
+
+(function videoCover(global, document, $) {
+
+	function VideoCover(element, options) {
+
+		this.options = $.extend(true, {}, this.defaults, options);
+		this.element = element;
+		this.$element = $(element);
+		$.proxy(init, this)();
+
+	}
+
+	VideoCover.prototype.defaults = {
+
+		ratio: 16 / 9
+
+	};
+
+	function init() {
+
+		var self = this;
+		self.$parent = self.$element.parent();
+
+		$(window).on('resize', function () {
+
+			setTimeout(function () {
+
+				$.proxy(onResize, self)();
+
+			}, 300);
+
+
+		}).resize();
+
+	}
+
+	function getWidth() {
+
+		var videoContainerHeight = this.$parent.height(),
+				videoContainerWidth = this.$parent.width(),
+				videoWidth = videoContainerHeight * this.options.ratio,
+				videoHeight = videoWidth * (1 / this.options.ratio),
+				k1 = videoContainerWidth / videoWidth,
+				k2 = videoContainerHeight / videoHeight,
+				k = Math.max(k1, k2);
+
+		return Math.ceil(videoWidth * k);
+
+	}
+
+	function onResize() {
+
+		var self = this;
+
+		self.$element.css({
+			width: $.proxy(getWidth, self)()
+		});
+
+	}
+
+	$.fn.videoCover = function (options) {
+
+		return this.each(function () {
+
+			var $this = $(this),
+					data = $this.data('videoCover');
+
+			if (!data) {
+				data = new VideoCover(this, typeof options === 'object' && options);
+				$this.data('videoCover', data);
+			}
+
+		});
+
+	};
+
+	$.fn.videoCover.Constructor = VideoCover;
+
+}(window, document, jQuery));
+
+(function discloser(global, document, $) {
+
+	function Discloser(element, options) {
+
+		this.options = $.extend(true, {}, this.defaults, options);
+		this.element = element;
+		this.$element = $(element);
+		$.proxy(init, this)();
+
+	}
+
+	Discloser.prototype.defaults = {
+
+		structure: {
+			header: '.discloser__header',
+			content: '.discloser__content'
+		},
+		activeClass: window.classes.active,
+		slide: true
+
+	};
+
+	function init() {
+
+		var self = this;
+
+		$.proxy(setStructure, self)();
+
+		self.$header.on('click', function () {
+
+			self.$element.toggleClass(self.options.activeClass);
+
+			if(self.options.slide)
+				self.$content.slideToggle();
+
+		});
+	}
+
+	function setStructure() {
+
+		var self = this,
+				structure = self.options.structure;
+
+		$.each(structure, function (name, value) {
+
+			self['$' + name] = self.$element.find(value);
+
+		});
+
+	}
+
+	$.fn.discloser = function (options) {
+
+		return this.each(function () {
+
+			var $this = $(this),
+					data = $this.data('discloser');
+
+			if (!data) {
+				data = new Discloser(this, typeof options === 'object' && options);
+				$this.data('discloser', data);
+			}
+
+		});
+
+	};
+
+	$.fn.discloser.Constructor = Discloser;
+
+}(window, document, jQuery));
+
+(function selectBox(global, document, $, undefined) {
+
+	function SelectBox(element, options) {
+
+		this.options = $.extend(true, {}, this.defaults, options);
+		this.element = element;
+		this.$element = $(element);
+		$.proxy(init, this)();
+
+	}
+
+	SelectBox.prototype.defaults = {
+
+		structure: {
+			caption: '.caption',
+			option: '.option'
+		},
+		activeClass: window.classes.active,
+		slide: true,
+		discloser: undefined
+
+	};
+
+	function init() {
+
+		var self = this;
+		$.proxy(setStructure, self)();
+
+		self.$option.first().prop('checked', true);
+
+		self.$option.on('click', function () {
+
+			var $option = $(this),
+					value = $option.val() || $option.data('value'),
+					discloser = self.options.discloser;
+
+			self.$caption.html(value);
+			self.$element.removeClass(self.options.activeClass);
+			if(discloser && discloser.options.slide)
+				discloser.$content.slideToggle();
+
+			$option.trigger('change');
+
+		});
+
+	}
+
+	function setStructure() {
+
+		var self = this,
+				structure = self.options.structure;
+
+		$.each(structure, function (name, value) {
+
+			self['$' + name] = self.$element.find(value);
+
+		});
+
+	}
+
+	$.fn.selectBox = function (options) {
+
+		return this.each(function () {
+
+			var $this = $(this),
+					data = $this.data('selectBox');
+
+			if (!data) {
+				data = new SelectBox(this, typeof options === 'object' && options);
+				$this.data('selectBox', data);
+			}
+
+		});
+
+	};
+
+	$.fn.selectBox.Constructor = SelectBox;
+
+}(window, document, jQuery));
+
+(function parallax(global, document, $) {
+
+	function Parallax(element, options) {
+
+		this.options = $.extend(true, {}, this.defaults, options);
+		this.element = element;
+		this.$element = $(element);
+		$.proxy(init, this)();
+
+	}
+
+	Parallax.prototype.defaults = {
+
+		speed: 20
+
+	};
+
+	function init() {
+
+		var self = this;
+
+		$(window).on('scroll', function () {
+
+			var scrollTop = $(this).scrollTop(),
+					translate = scrollTop / self.options.speed;
+
+			setParallax(self.$element, translate);
+
+		});
+
+	}
+
+	function setParallax($element, translate) {
+
+		$element.css({
+			'transform': 'translateY(' + translate + '%)'
+		});
+
+	}
+
+	$.fn.parallax = function (options) {
+
+		return this.each(function () {
+
+			var $this = $(this),
+					data = $this.data('parallax');
+
+			if (!data) {
+				data = new Parallax(this, typeof options === 'object' && options);
+				$this.data('parallax', data);
+			}
+
+		});
+
+	};
+
+	$.fn.parallax.Constructor = Parallax;
+
+}(window, document, jQuery));
+
+numeral.locale('ru');
