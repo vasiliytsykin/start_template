@@ -102,6 +102,22 @@
 		}
 	};
 
+	global.onGoogleMapsApiReady = function() {
+
+		$(global).trigger('googleMapsApiReady');
+
+	};
+
+	global.loadGoogleMapsApi = function () {
+
+		var $script = $('<script async defer></script>');
+
+		$script.attr('src', 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDZ1TXC6qzkLOU_hPKB4Rkx7yx3EpS3P1k&callback=onGoogleMapsApiReady');
+
+		$('head').append($script);
+
+	};
+
 }(window, document, jQuery));
 
 (function scrollIndicator(window, $) {

@@ -38,15 +38,23 @@ gulp.task('js', function () {
 			.pipe(gulp.dest('src/js'));
 });
 
+
 gulp.task('watch', ['sass', 'js'], function () {
 	var sassInPath = 'src/sass/*.sass',
-			allPath = 'src/**/*';
+			jsPath = ['src/js/*.js', '!src/js/script.js'],
+			mainJSPath = 'src/js/script.js',
+			cssPath = 'src/css/*.css',
+			allPath = ['src/**/*', '!src/sass/**/*', '!src/css/**/*', '!src/js/**/*', '!src/lib/**/*'];
 
 	browserSync.init({
 		proxy: 'your_site',
-		notify: false
+		notify: false,
+		open: false
 	});
 
-	gulp.watch(sassInPath, ['sass']).on('change', browserSync.reload);
-	gulp.watch(allPath, ['js']).on('change', browserSync.reload)
+	gulp.watch(sassInPath, ['sass']);
+	gulp.watch(cssPath).on('change', browserSync.reload);
+	gulp.watch(jsPath, ['js']);
+	gulp.watch(mainJSPath).on('change', browserSync.reload);
+	gulp.watch(allPath).on('change', browserSync.reload);
 });
