@@ -27,10 +27,14 @@
 	};
 
 	global.classes = {
-
 		active: 'active',
 		popupOpened: 'popup-opened',
-		disabled: 'disabled'
+		disabled: 'disabled',
+		dismiss: 'dismiss',
+		ready: 'ready',
+		freeze: 'freeze',
+		init: 'init',
+		hidden: 'hidden'
 	};
 
 	global.roundTo = function (x, n) {
@@ -772,7 +776,8 @@
 
 	Parallax.prototype.defaults = {
 
-		speed: 20
+		speed: 0.05,
+		units: '%'
 
 	};
 
@@ -783,18 +788,18 @@
 		$(window).on('scroll', function () {
 
 			var scrollTop = $(this).scrollTop(),
-					translate = scrollTop / self.options.speed;
+					translate = scrollTop * self.options.speed;
 
-			setParallax(self.$element, translate);
+			setParallax(self.$element, translate, self.options.units);
 
 		});
 
 	}
 
-	function setParallax($element, translate) {
+	function setParallax($element, translate, units) {
 
 		$element.css({
-			'transform': 'translateY(' + translate + '%)'
+			'transform': 'translateY(' + translate + units + ')'
 		});
 
 	}
@@ -819,4 +824,55 @@
 
 }(window, document, jQuery));
 
-numeral.locale('ru');
+(function freezer(window, document, $) {
+
+	function Freezer() {
+
+		this.$body = $('html, body');
+		this.$content = $('.content');
+		this.$window = $(window);
+		this.st = this.$window.scrollTop();
+		this.freezeCount = 0;
+
+	}
+
+	Freezer.prototype.freeze = function () {
+
+		var self = this,
+				st = self.$window.scrollTop();
+
+		if(self.freezeCount === 0) {
+			self.$body.addClass(window.classes.freeze);
+			self.$content.css({
+				'margin-top': -st
+			});
+			self.st = st;
+		}
+
+		self.freezeCount++;
+
+	};
+
+	Freezer.prototype.unFreeze = function (reset) {
+
+		var self = this,
+				st = self.st;
+
+		self.freezeCount--;
+
+		if(self.freezeCount === 0) {
+			self.$body.removeClass(window.classes.freeze);
+			self.$content.removeAttr('style');
+			if(!reset) {
+				self.$window.scrollTop(st);
+			}
+		}
+
+	};
+
+	window.Freezer = new Freezer();
+
+
+}(window, document, jQuery));
+
+// numeral.locale('ru');

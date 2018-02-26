@@ -1,12 +1,13 @@
 {
   "name": "start_template",
   "devDependencies": {
+    "browser-sync": "^2.14.0",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^3.1.1",
     "gulp-clean-css": "^3.0.4",
     "gulp-concat": "^2.6.1",
     "gulp-rename": "^1.2.2",
     "gulp-sass": "^2.3.2",
-    "browser-sync": "^2.14.0"
+    "gulp-uglify": "^3.0.0"
   }
 }
